@@ -1,6 +1,6 @@
 FROM php:8.3-fpm
 
-# системные пакеты + pgsql
+# системные пакеты + pgsql.
 RUN apt-get update && apt-get install -y \
     bash \
     curl \
