@@ -74,13 +74,13 @@ services:
       - backend
     volumes:
       - appdata:/var/www/html
-      - ./services/php-web/laravel-patches:/opt/laravel-patches:ro
 
   nginx:
     image: nginx:1.27-alpine
     container_name: web_nginx
     depends_on:
-      - php
+      - php:
+          condition: service_started
     volumes:
       - appdata:/var/www/html:ro
       - ./services/php-web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
