@@ -6,10 +6,11 @@ APP_DIR="/var/www/html"
 echo "[php] container starting"
 
 if [ ! -f "$APP_DIR/artisan" ]; then
-  echo "[php] ERROR: Laravel application not found in image"
+  echo "[php] ERROR: Laravel application not found"
   exit 1
 fi
 
+# ожидание postgres
 echo "[php] waiting for database..."
 until php -r "
 try {
@@ -25,7 +26,7 @@ try {
   sleep 2
 done
 
-echo "[php] database is ready"
+echo "[php] database ready"
 
 # миграции
 php artisan migrate --force || true
