@@ -2,25 +2,38 @@
 set -e
 
 APP_DIR="/var/www/html"
-PATCH_DIR="/opt/laravel-patches"
 
-echo "[php] init start"
+echo "[php] container starting"
 
 if [ ! -f "$APP_DIR/artisan" ]; then
-  echo "[php] creating laravel skeleton"
-  composer create-project --no-interaction --prefer-dist laravel/laravel:^11 "$APP_DIR"
-  cp "$APP_DIR/.env.example" "$APP_DIR/.env" || true
-  sed -i 's|APP_NAME=Laravel|APP_NAME=ISSOSDR|g' "$APP_DIR/.env" || true
-  php "$APP_DIR/artisan" key:generate || true
+  echo "[php] ERROR: Laravel application not found in image"
+  exit 1
 fi
 
-if [ -d "$PATCH_DIR" ]; then
-  echo "[php] applying patches"
-  rsync -a "$PATCH_DIR/" "$APP_DIR/"
-fi
+echo "[php] waiting for database..."
+until php -r "
+try {
+  new PDO(
+    'pgsql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT') . ';dbname=' . getenv('DB_DATABASE'),
+    getenv('DB_USERNAME'),
+    getenv('DB_PASSWORD')
+  );
+} catch (Exception \$e) {
+  exit(1);
+}
+"; do
+  sleep 2
+done
 
-chown -R www-data:www-data "$APP_DIR"
-chmod -R 775 "$APP_DIR/storage" "$APP_DIR/bootstrap/cache" || true
+echo "[php] database is ready"
+
+# миграции
+php artisan migrate --force || true
+
+# кэш
+php artisan config:clear || true
+php artisan config:cache || true
+php artisan route:cache || true
 
 echo "[php] starting php-fpm"
-php-fpm -F
+exec php-fpm -F
