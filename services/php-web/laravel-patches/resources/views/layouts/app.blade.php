@@ -7,24 +7,33 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
+        /*
+        ========================================
+        LIGHT MINIMALIST THEME
+        ========================================
+        */
         :root {
-            --bg-primary: #0a0a0a; 
-            --bg-secondary: #1a1a1a;
-            --text-color: #f0f0f0; 
-            --accent-color: #4a90e2;
-            --border-color: #333333;
+            --bg-primary: #f8f9fa; /* Светлый фон (почти белый) */
+            --bg-secondary: #ffffff; /* Белый фон для карточек */
+            --text-color: #212529; /* Темный текст */
+            --accent-color: #007bff; /* Чистый синий акцент */
+            --border-color: #e9ecef; /* Очень тонкая светло-серая линия */
+            --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.05); /* Легкая тень для "парения" */
         }
 
+        /* 1. Общий Стиль и Фон */
         body {
             background-color: var(--bg-primary);
             color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            transition: background-color 0.3s;
         }
 
+        /* 2. Навигация (Чистота и Контраст) */
         .navbar {
             background-color: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: none;
+            border-bottom: 1px solid var(--border-color); 
+            box-shadow: var(--shadow-subtle);
             padding: 1rem 0;
         }
         .navbar-brand {
@@ -33,42 +42,68 @@
         }
         .nav-link {
             color: var(--text-color) !important;
-            transition: color 0.2s;
+            font-weight: 500;
+            border-bottom: 3px solid transparent; /* Для эффекта активной ссылки */
+            transition: color 0.2s, border-bottom-color 0.2s;
         }
         .nav-link:hover {
             color: var(--accent-color) !important;
-            opacity: 0.8;
+            border-bottom-color: var(--accent-color);
+            opacity: 1;
+        }
+        .nav-item .active {
+            border-bottom-color: var(--accent-color);
         }
 
-        /* минимализм чут-чут */
+        /* 3. Карточки (Плоский дизайн) */
         .card { 
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            transition: border-color 0.2s;
-            box-shadow: none;
-            border-radius: 4px;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            box-shadow: var(--shadow-subtle);
+            border-radius: 6px;
         }
         .card:hover { 
-            transform: none;
+            /* Усиленный эффект при наведении, но без сдвига */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
             border-color: var(--accent-color);
         }
-
-        /* для вайба */
-        #map{height:340px; border: 1px solid var(--border-color);}
-        .form-control {
-            background-color: #1a1a1a;
-            border-color: var(--border-color);
-            color: var(--text-color);
+        .card-header {
+            background-color: var(--bg-primary); /* Легкий контраст */
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
         }
+
+        /* 4. Формы и Интерактивность */
+        #map{
+            height:340px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px;
+        }
+        .form-control {
+            background-color: #ffffff;
+            border-color: #ced4da;
+            color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25); /* Акцентное свечение */
+        }
+        
         .btn-outline-light {
             color: var(--accent-color);
             border-color: var(--accent-color);
+            /* Переопределяем Bootstrap-класс, который тут уже не Light */
+            background-color: transparent;
         }
         .btn-outline-light:hover {
             background-color: var(--accent-color);
-            color: var(--bg-secondary) !important;
+            color: #ffffff !important;
+            border-color: var(--accent-color);
         }
 
+        /* Анимация */
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -78,13 +113,13 @@
 <body>
 <nav class="navbar navbar-expand-lg mb-4">
     <div class="container">
-        <a class="navbar-brand" href="/dashboard">КАССИОПЕЯ</a>
+        <a class="navbar-brand" href="/dashboard">✨ КАССИОПЕЯ</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link active" aria-current="page" href="/dashboard">Dashboard</a></li>
                 <li class="nav-item"><a class="nav-link" href="/osdr">OSDR Data</a></li>
                 <li class="nav-item"><a class="nav-link" href="/legacy">Legacy Telemetry</a></li>
             </ul>
