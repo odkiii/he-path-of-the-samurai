@@ -3,7 +3,7 @@ program LegacyCSV;
 {$mode objfpc}{$H+}
 
 uses
-  SysUtils, DateUtils, Process;
+  SysUtils, DateUtils, Process, Classes, Math;
 
 function GetEnvDef(const name, def: string): string;
 var v: string;
@@ -17,42 +17,91 @@ begin
   Result := minV + Random * (maxV - minV);
 end;
 
-procedure GenerateAndCopy();
+function RandBool: Boolean;
+begin
+  Result := Random(2) = 0;
+end;
+
+procedure GenerateFiles();
 var
-  outDir, fn, fullpath, pghost, pgport, pguser, pgpass, pgdb, copyCmd: string;
+  outDir, fnCsv, fnXls, fullpathCsv, fullpathXls: string;
   f: TextFile;
   ts: string;
+  // Data vars
+  recAt: TDateTime;
+  volt, temp: Double;
+  isActive: Boolean;
+  statusMsg: string;
 begin
   outDir := GetEnvDef('CSV_OUT_DIR', '/data/csv');
   ts := FormatDateTime('yyyymmdd_hhnnss', Now);
-  fn := 'telemetry_' + ts + '.csv';
-  fullpath := IncludeTrailingPathDelimiter(outDir) + fn;
+  fnCsv := 'telemetry_' + ts + '.csv';
+  fnXls := 'telemetry_' + ts + '.xls'; // Using .xls for SpreadsheetML XML
+  fullpathCsv := IncludeTrailingPathDelimiter(outDir) + fnCsv;
+  fullpathXls := IncludeTrailingPathDelimiter(outDir) + fnXls;
 
-  // write CSV
-  AssignFile(f, fullpath);
+  recAt := Now;
+  volt := RandFloat(3.2, 12.6);
+  temp := RandFloat(-50.0, 80.0);
+  isActive := RandBool;
+  if isActive then statusMsg := 'SYSTEM_OK' else statusMsg := 'SYSTEM_OFFLINE';
+
+  AssignFile(f, fullpathCsv);
   Rewrite(f);
-  Writeln(f, 'recorded_at,voltage,temp,source_file');
-  Writeln(f, FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) + ',' +
-             FormatFloat('0.00', RandFloat(3.2, 12.6)) + ',' +
-             FormatFloat('0.00', RandFloat(-50.0, 80.0)) + ',' +
-             fn);
+  // Header
+  Writeln(f, 'recorded_at,voltage,temperature,is_active,status_message');
+  // Data row with correct formatting
+  Writeln(f, FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"', recAt) + ',' +
+             FormatFloat('0.00', volt) + ',' +
+             FormatFloat('0.00', temp) + ',' +
+             UpperCase(BoolToStr(isActive, 'TRUE', 'FALSE')) + ',' +
+             '"' + statusMsg + '"');
   CloseFile(f);
 
-  // COPY into Postgres
-  pghost := GetEnvDef('PGHOST', 'db');
-  pgport := GetEnvDef('PGPORT', '5432');
-  pguser := GetEnvDef('PGUSER', 'monouser');
-  pgpass := GetEnvDef('PGPASSWORD', 'monopass');
-  pgdb   := GetEnvDef('PGDATABASE', 'monolith');
+  AssignFile(f, fullpathXls);
+  Rewrite(f);
+  Writeln(f, '<?xml version="1.0"?>');
+  Writeln(f, '<?mso-application progid="Excel.Sheet"?>');
+  Writeln(f, '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"');
+  Writeln(f, ' xmlns:o="urn:schemas-microsoft-com:office:office"');
+  Writeln(f, ' xmlns:x="urn:schemas-microsoft-com:office:excel"');
+  Writeln(f, ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"');
+  Writeln(f, ' xmlns:html="http://www.w3.org/TR/REC-html40">');
+  Writeln(f, ' <Worksheet ss:Name="Telemetry">');
+  Writeln(f, '  <Table>');
+  // Header
+  Writeln(f, '   <Row>');
+  Writeln(f, '    <Cell><Data ss:Type="String">recorded_at</Data></Cell>');
+  Writeln(f, '    <Cell><Data ss:Type="String">voltage</Data></Cell>');
+  Writeln(f, '    <Cell><Data ss:Type="String">temperature</Data></Cell>');
+  Writeln(f, '    <Cell><Data ss:Type="String">is_active</Data></Cell>');
+  Writeln(f, '    <Cell><Data ss:Type="String">status_message</Data></Cell>');
+  Writeln(f, '   </Row>');
+  // Data
+  Writeln(f, '   <Row>');
+  Writeln(f, '    <Cell><Data ss:Type="String">' + FormatDateTime('yyyy-mm-ddThh:nn:ss', recAt) + '</Data></Cell>');
+  Writeln(f, '    <Cell><Data ss:Type="Number">' + FormatFloat('0.00', volt) + '</Data></Cell>');
+  Writeln(f, '    <Cell><Data ss:Type="Number">' + FormatFloat('0.00', temp) + '</Data></Cell>');
+  Writeln(f, '    <Cell><Data ss:Type="String">' + BoolToStr(isActive, 'TRUE', 'FALSE') + '</Data></Cell>');
+  Writeln(f, '    <Cell><Data ss:Type="String">' + statusMsg + '</Data></Cell>');
+  Writeln(f, '   </Row>');
+  Writeln(f, '  </Table>');
+  Writeln(f, ' </Worksheet>');
+  Writeln(f, '</Workbook>');
+  CloseFile(f);
 
-  // Use psql with COPY FROM PROGRAM for simplicity
-  // Here we call psql reading from file
-  copyCmd := 'psql "host=' + pghost + ' port=' + pgport + ' user=' + pguser + ' dbname=' + pgdb + '" ' +
-             '-c "\copy telemetry_legacy(recorded_at, voltage, temp, source_file) FROM ''' + fullpath + ''' WITH (FORMAT csv, HEADER true)"';
-  // Mask password via env
-  SetEnvironmentVariable('PGPASSWORD', pgpass);
-  // Execute
-  fpSystem(copyCmd);
+  ExecuteProcess('/usr/bin/psql', [
+    'host=' + GetEnvDef('PGHOST', 'db'),
+    'port=' + GetEnvDef('PGPORT', '5432'),
+    'user=' + GetEnvDef('PGUSER', 'monouser'),
+    'dbname=' + GetEnvDef('PGDATABASE', 'monolith'),
+    '-c',
+    'INSERT INTO telemetry_legacy(recorded_at, voltage, temp, source_file) VALUES (' +
+    '''' + FormatDateTime('yyyy-mm-dd hh:nn:ss', recAt) + ''',' +
+    FormatFloat('0.00', volt) + ',' +
+    FormatFloat('0.00', temp) + ',' +
+    '''' + fnCsv + ''')'
+  ]);
 end;
 
 var period: Integer;
@@ -62,7 +111,7 @@ begin
   while True do
   begin
     try
-      GenerateAndCopy();
+      GenerateFiles();
     except
       on E: Exception do
         WriteLn('Legacy error: ', E.Message);

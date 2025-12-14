@@ -1,6 +1,8 @@
 FROM debian:12-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends     fp-compiler postgresql-client ca-certificates     && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fp-compiler fp-units-fcl postgresql-client ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/legacy
 COPY legacy.pas ./
