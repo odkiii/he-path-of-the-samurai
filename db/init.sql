@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS telemetry_legacy (
     recorded_at TIMESTAMPTZ NOT NULL,
     voltage NUMERIC(6,2) NOT NULL,
     temp NUMERIC(6,2) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    status_message TEXT,
     source_file TEXT NOT NULL
 );
 
@@ -28,4 +30,15 @@ VALUES
 ('welcome', 'Добро пожаловать', '<h3>Демо контент</h3><p>Этот текст хранится в БД</p>'),
 ('unsafe', 'Небезопасный пример', '<script>console.log("XSS training")
 </script><p>Если вы видите всплывашку значит защита не работает</p>')
+ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS cms_blocks (
+    id BIGSERIAL PRIMARY KEY,
+    slug TEXT UNIQUE NOT NULL,
+    content TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+INSERT INTO cms_blocks (slug, content) VALUES
+('dashboard_experiment', '<div class="alert alert-info">Эксперимент</div>')
 ON CONFLICT DO NOTHING;

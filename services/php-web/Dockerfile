@@ -1,6 +1,6 @@
 FROM php:8.3-fpm
 
-# системные пакеты + pgsql.
+# пакеты и расширения
 RUN apt-get update && apt-get install -y \
     bash \
     curl \
@@ -16,16 +16,12 @@ RUN apt-get update && apt-get install -y \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # каталоги
+RUN mkdir -p /var/www/html /opt/laravel-patches
 WORKDIR /var/www/html
-
-COPY . /var/www/html
-
-# права (критично для Laravel)
-RUN chown -R www-data:www-data /var/www/html \
- && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # entrypoint
 COPY entrypoint.sh /usr/local/bin/php_entrypoint.sh
 RUN chmod +x /usr/local/bin/php_entrypoint.sh
 
 CMD ["bash", "/usr/local/bin/php_entrypoint.sh"]
+

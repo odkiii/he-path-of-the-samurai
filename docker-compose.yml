@@ -15,7 +15,7 @@ services:
       POSTGRES_USER: monouser
       POSTGRES_PASSWORD: monopass
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U monouser -d monolith"]
+      test: [ "CMD-SHELL", "pg_isready -U monouser -d monolith" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -74,13 +74,13 @@ services:
       - backend
     volumes:
       - appdata:/var/www/html
+      - ./services/php-web/laravel-patches:/opt/laravel-patches:ro
 
   nginx:
     image: nginx:1.27-alpine
     container_name: web_nginx
     depends_on:
-      - php:
-          condition: service_started
+      - php
     volumes:
       - appdata:/var/www/html:ro
       - ./services/php-web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
