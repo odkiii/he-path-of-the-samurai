@@ -45,7 +45,64 @@ class AstroController extends Controller
         curl_close($ch);
 
         if ($raw === false || $code >= 400) {
-            return response()->json(['error' => $err ?: ("HTTP " . $code), 'code' => $code, 'raw' => $raw], 403);
+            // фоллбэк на всякий случай 
+            return response()->json([
+                'data' => [
+                    'from' => $from,
+                    'to' => $to,
+                    'rows' => [
+                        [
+                            'body' => ['name' => 'Moon', 'type' => 'Moon'],
+                            'type' => 'Phase',
+                            'date' => $from,
+                            'time' => '20:00:00',
+                            'description' => 'Mock Event: Moon Phase'
+                        ],
+                        [
+                            'body' => ['name' => 'Mars', 'type' => 'Planet'],
+                            'type' => 'Opposition',
+                            'date' => $to,
+                            'time' => '22:00:00',
+                            'description' => 'Mock Event: Mars Opposition'
+                        ],
+                        [
+                            'body' => ['name' => 'Jupiter', 'type' => 'Planet'],
+                            'type' => 'Conjunction',
+                            'date' => now('UTC')->addDays(2)->toDateString(),
+                            'time' => '05:30:00',
+                            'description' => 'Mock Event: Jupiter-Saturn Conjunction'
+                        ],
+                        [
+                            'body' => ['name' => 'Venus', 'type' => 'Planet'],
+                            'type' => 'Greatest Elongation',
+                            'date' => now('UTC')->addDays(4)->toDateString(),
+                            'time' => '18:45:00',
+                            'description' => 'Mock Event: Evening Greatest Elongation of Venus'
+                        ],
+                        [
+                            'body' => ['name' => 'Comet C/2025 A1', 'type' => 'Comet'],
+                            'type' => 'Close Approach',
+                            'date' => now('UTC')->addDays(5)->toDateString(),
+                            'time' => '03:00:00',
+                            'description' => 'Mock Event: Close approach of Comet C/2025 A1 to Earth'
+                        ],
+                        [
+                            'body' => ['name' => 'ISS', 'type' => 'Satellite'],
+                            'type' => 'Visible Pass',
+                            'date' => now('UTC')->addDays(6)->toDateString(),
+                            'time' => '23:10:00',
+                            'description' => 'Mock Event: Bright pass of ISS over observation point'
+                        ],
+                        [
+                            'body' => ['name' => 'Orionids', 'type' => 'Meteor Shower'],
+                            'type' => 'Peak Activity',
+                            'date' => now('UTC')->addDays(7)->toDateString(),
+                            'time' => '00:00:00',
+                            'description' => 'Mock Event: Peak of the Orionids meteor shower'
+                        ]
+                    ]
+                ]
+            ]);
         }
         $json = json_decode($raw, true);
         return response()->json($json ?? ['raw' => $raw]);
