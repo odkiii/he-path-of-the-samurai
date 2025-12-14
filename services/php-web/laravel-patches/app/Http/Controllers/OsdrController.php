@@ -8,18 +8,41 @@ class OsdrController extends Controller
 {
     public function index(Request $request)
     {
-        $limit = $request->query('limit', '20'); // учебная нестрогая валидация
+        $limit = $request->query('limit', '50');
+        $sort  = $request->query('sort', 'inserted_at');
+        $dir   = $request->query('dir', 'desc');
+        $filterCol = $request->query('filter_col');
+        $filterVal = $request->query('filter_val');
+
         $base  = getenv('RUST_BASE') ?: 'http://rust_iss:3000';
 
         $json  = @file_get_contents($base.'/osdr/list?limit='.$limit);
         $data  = $json ? json_decode($json, true) : ['items' => []];
         $items = $data['items'] ?? [];
 
-        $items = $this->flattenOsdr($items); // ключевая строка
+        $items = $this->flattenOsdr($items);
+
+        // фильтрация
+        if ($filterCol && $filterVal) {
+            $items = array_filter($items, function($item) use ($filterCol, $filterVal) {
+                return isset($item[$filterCol]) && stripos((string)$item[$filterCol], $filterVal) !== false;
+            });
+        }
+
+        // соритировка
+        usort($items, function($a, $b) use ($sort, $dir) {
+            $valA = $a[$sort] ?? '';
+            $valB = $b[$sort] ?? '';
+            if ($valA == $valB) return 0;
+            $res = ($valA < $valB) ? -1 : 1;
+            return $dir === 'desc' ? -$res : $res;
+        });
 
         return view('osdr', [
             'items' => $items,
             'src'   => $base.'/osdr/list?limit='.$limit,
+            'sort'  => $sort,
+            'dir'   => $dir,
         ]);
     }
 

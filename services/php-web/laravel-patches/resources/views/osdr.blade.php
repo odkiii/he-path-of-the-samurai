@@ -2,19 +2,37 @@
 
 @section('content')
 <div class="container py-3">
-  <h3 class="mb-3">NASA OSDR</h3>
+  <h3 class="mb-3">Данные NASA OSDR</h3>
   <div class="small text-muted mb-2">Источник {{ $src }}</div>
 
+  <div class="card mb-3 p-3">
+    <form action="/osdr" method="GET" class="row g-3">
+        <div class="col-md-3">
+            <select name="filter_col" class="form-select">
+                <option value="title">Название</option>
+                <option value="dataset_id">ID Набора</option>
+                <option value="status">Статус</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <input type="text" name="filter_val" class="form-control" placeholder="Значение фильтра...">
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
+        </div>
+    </form>
+  </div>
+
   <div class="table-responsive">
-    <table class="table table-sm table-striped align-middle">
-      <thead>
+    <table class="table table-sm table-striped align-middle table-hover">
+      <thead class="table-dark">
         <tr>
-          <th>#</th>
-          <th>dataset_id</th>
-          <th>title</th>
+          <th><a href="?sort=id&dir={{ $dir === 'asc' ? 'desc' : 'asc' }}" class="text-white text-decoration-none"># {{ $sort === 'id' ? ($dir === 'asc' ? '↑' : '↓') : '' }}</a></th>
+          <th><a href="?sort=dataset_id&dir={{ $dir === 'asc' ? 'desc' : 'asc' }}" class="text-white text-decoration-none">dataset_id {{ $sort === 'dataset_id' ? ($dir === 'asc' ? '↑' : '↓') : '' }}</a></th>
+          <th><a href="?sort=title&dir={{ $dir === 'asc' ? 'desc' : 'asc' }}" class="text-white text-decoration-none">title {{ $sort === 'title' ? ($dir === 'asc' ? '↑' : '↓') : '' }}</a></th>
           <th>REST_URL</th>
-          <th>updated_at</th>
-          <th>inserted_at</th>
+          <th><a href="?sort=updated_at&dir={{ $dir === 'asc' ? 'desc' : 'asc' }}" class="text-white text-decoration-none">updated_at {{ $sort === 'updated_at' ? ($dir === 'asc' ? '↑' : '↓') : '' }}</a></th>
+          <th><a href="?sort=inserted_at&dir={{ $dir === 'asc' ? 'desc' : 'asc' }}" class="text-white text-decoration-none">inserted_at {{ $sort === 'inserted_at' ? ($dir === 'asc' ? '↑' : '↓') : '' }}</a></th>
           <th>raw</th>
         </tr>
       </thead>
