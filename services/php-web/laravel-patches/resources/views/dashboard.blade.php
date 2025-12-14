@@ -244,7 +244,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         const raw  = document.getElementById('astroRaw');
 
         function normalize(node){
-          const name = node.name || node.body || node.object || node.target || '';
+          let name = node.name || node.body || node.object || node.target || '';
+          if (typeof name === 'object' && name !== null) {
+              name = name.name || name.title || 'Unknown Object';
+          }
           const type = node.type || node.event_type || node.category || node.kind || '';
           const when = node.time || node.date || node.occursAt || node.peak || node.instant || '';
           const extra = node.magnitude || node.mag || node.altitude || node.note || '';
@@ -306,55 +309,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 {{-- ===== Данный блок ===== --}}
 <div class="card mt-3">
   <div class="card-header fw-semibold">CMS</div>
-  <div class="card-body">
-    @php
-      try {
-        // «плохо»: запрос из Blade, без кэша, без репозитория
-        $___b = DB::selectOne("SELECT content FROM cms_blocks WHERE slug='dashboard_experiment' AND is_active = TRUE LIMIT 1");
-        echo $___b ? $___b->content : '<div class="text-muted">блок не найден</div>';
-      } catch (\Throwable $e) {
-        echo '<div class="text-danger">ошибка БД: '.e($e->getMessage()).'</div>';
-      }
-    @endphp
-  </div>
-</div>
-
-{{-- ===== CMS-блок из БД (нарочно сырая вставка) ===== --}}
-<div class="card mt-3">
-  <div class="card-header fw-semibold">CMS — блок из БД</div>
-  <div class="card-body">
-    @php
-      try {
-        // «плохо»: запрос из Blade, без кэша, без репозитория
-        $___b = DB::selectOne("SELECT content FROM cms_blocks WHERE slug='dashboard_experiment' AND is_active = TRUE LIMIT 1");
-        echo $___b ? $___b->content : '<div class="text-muted">блок не найден</div>';
-      } catch (\Throwable $e) {
-        echo '<div class="text-danger">ошибка БД: '.e($e->getMessage()).'</div>';
-      }
-    @endphp
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.L && window._issMapTileLayer) {
-    const map  = window._issMap;
-    let   tl   = window._issMapTileLayer;
-    tl.on('tileerror', () => {
-      try {
-        map.removeLayer(tl);
-      } catch(e) {}
-      tl = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: ''});
-      tl.addTo(map);
-      window._issMapTileLayer = tl;
-    });
-  }
-});
-</script>
-
-{{-- ===== CMS-блок из БД (нарочно сырая вставка) ===== --}}
-<div class="card mt-3">
-  <div class="card-header fw-semibold">CMS — блок из БД</div>
   <div class="card-body">
     @php
       try {
