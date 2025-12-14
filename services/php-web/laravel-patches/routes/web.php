@@ -7,6 +7,8 @@ Route::get('/', fn() => redirect('/dashboard'));
 // Панели
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
 Route::get('/osdr',      [\App\Http\Controllers\OsdrController::class,      'index']);
+Route::get('/search',    [\App\Http\Controllers\SearchController::class,    'index']);
+Route::get('/legacy',    [\App\Http\Controllers\LegacyController::class,    'index']);
 
 // Прокси к rust_iss
 Route::get('/api/iss/last',  [\App\Http\Controllers\ProxyController::class, 'last']);
